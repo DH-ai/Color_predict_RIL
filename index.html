@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        #outerBox {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            background-color: lightgray;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #innerBox {
+            width: 100px;
+            height: 100px;
+            transition: background-color 0.5s ease;
+        }
+
+        #goodButton, #badButton {
+            margin: 10px;
+            padding: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="outerBox">
+        <div id="innerBox"></div>
+    </div>
+    <button id="goodButton" onclick="provideFeedback('good')">Good</button>
+    <button id="badButton" onclick="provideFeedback('bad')">Bad</button>
+
+    <script>
+        const outerBox = document.getElementById('outerBox');
+        const innerBox = document.getElementById('innerBox');
+        const goodButton = document.getElementById('goodButton');
+        const badButton = document.getElementById('badButton');
+
+        const numActions = 3; // Number of actions (color channels to adjust)
+        const learningRate = 0.1;
+        const discountFactor = 0.9;
+
+        let state = getRandomState(); // Initial state
+        let qTable = initializeQTable();
+
+        function getRandomState() {
+            return [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)];
+        }
+
+        function initializeQTable() {
+            return Array.from({ length: 256 }, () => Array.from({ length: 256 }, () => Array.from({ length: 256 }, () => Array(numActions).fill(0))));
+        }
+
+        function chooseAction() {
+            return Math.floor(Math.random() * numActions); // Randomly choose an action (color channel to adjust)
+        }
+
+        function takeAction(action) {
+            const newState = [...state];
+
+            // Adjust the chosen color channel with a larger random range
+            newState[action] += Math.floor(Math.random() * 80 - 40); // Adjust color channel by a random amount
+
+            // Clip values to be within [0, 255]
+            newState[action] = Math.min(255, Math.max(0, newState[action]));
+
+            return newState;
+        }
+
+        function provideFeedback(feedback) {
+            const action = chooseAction();
+            const newState = takeAction(action);
+
+            // Calculate reward based on feedback
+            const reward = feedback === 'good' ? 1 : -1;
+
+            // Update Q-value using the Q-learning update rule
+            qTable[state[0]][state[1]][state[2]][action] += learningRate * (reward + discountFactor * Math.max(...qTable[newState[0]][newState[1]][newState[2]]) - qTable[state[0]][state[1]][state[2]][action]);
+
+            // Update state
+            state = newState;
+
+            // Update innerBox with the new color
+            innerBox.style.backgroundColor = `rgb(${state[0]}, ${state[1]}, ${state[2]})`;
+
+            // Update Q-values visualization
+            updateQValuesVisualization();
+        }
+
+        function updateQValuesVisualization() {
+            const qValues = qTable[state[0]][state[1]][state[2]];
+            console.log('Q-Values:', qValues);
+        }
+    </script>
+</body>
+</html>
